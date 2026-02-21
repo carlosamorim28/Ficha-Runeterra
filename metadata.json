@@ -1,0 +1,5 @@
+{
+  "name": "Ficha Automática Runarcana",
+  "description": "Uma ficha de personagem digital para o sistema Runarcana com cálculos automáticos de modificadores, perícias e atributos.",
+  "requestFramePermissions": []
+}
