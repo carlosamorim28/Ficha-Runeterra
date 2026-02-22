@@ -20,36 +20,41 @@ import { HexStat } from './components/HexStat';
 export default function App() {
   // Load initial state from local storage or default
   const [data, setData] = useState<CharacterSheetData>(() => {
-    const saved = localStorage.getItem('runarcana-sheet-v1');
-    const parsed = saved ? JSON.parse(saved) : DEFAULT_CHARACTER;
-    
-    // Migration logic for older string fields
-    const listFields: Array<keyof CharacterSheetData> = ['features', 'languages', 'proficiencies', 'notes'];
-    listFields.forEach(field => {
-      if (typeof parsed[field] === 'string') {
-        parsed[field] = [];
-      }
-    });
+    try {
+      const saved = localStorage.getItem('runarcana-sheet-v1');
+      const parsed = saved ? JSON.parse(saved) : DEFAULT_CHARACTER;
+      
+      // Migration logic for older string fields
+      const listFields: Array<keyof CharacterSheetData> = ['features', 'languages', 'proficiencies', 'notes'];
+      listFields.forEach(field => {
+        if (typeof parsed[field] === 'string') {
+          parsed[field] = [];
+        }
+      });
 
-    if (typeof parsed.equipment === 'string') {
-      parsed.equipment = [];
-    } else if (Array.isArray(parsed.equipment)) {
-      parsed.equipment = parsed.equipment.map((eq: any) => ({
-        ...eq,
-        isEquipped: eq.isEquipped ?? false,
-        bonusType: eq.bonusType ?? 'none',
-        bonusSource: eq.bonusSource ?? 'flat',
-        bonusValue: eq.bonusValue ?? 0,
-      }));
-    } else {
-      parsed.equipment = [];
+      if (typeof parsed.equipment === 'string') {
+        parsed.equipment = [];
+      } else if (Array.isArray(parsed.equipment)) {
+        parsed.equipment = parsed.equipment.map((eq: any) => ({
+          ...eq,
+          isEquipped: eq.isEquipped ?? false,
+          bonusType: eq.bonusType ?? 'none',
+          bonusSource: eq.bonusSource ?? 'flat',
+          bonusValue: eq.bonusValue ?? 0,
+        }));
+      } else {
+        parsed.equipment = [];
+      }
+      
+      if (parsed.info.level === undefined) {
+        parsed.info.level = 1;
+      }
+      
+      return parsed;
+    } catch (e) {
+      console.error("Error loading saved data:", e);
+      return DEFAULT_CHARACTER;
     }
-    
-    if (parsed.info.level === undefined) {
-      parsed.info.level = 1;
-    }
-    
-    return parsed;
   });
 
   const [rollResult, setRollResult] = useState<RollResult | null>(null);
