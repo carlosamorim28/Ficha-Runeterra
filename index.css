@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+@theme {
+  --font-tech: "Chakra Petch", sans-serif;
+  --font-fantasy: "Cinzel", serif;
+}
+
+@layer base {
+  body {
+    @apply font-sans bg-slate-900;
+    background-image: radial-gradient(#1e293b 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+}
+
+@layer components {
+  .no-print {
+    @apply print:hidden;
+  }
+  
+  .page-break {
+    @apply print:break-before-page;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+@media print {
+  body {
+    background-color: white !important;
+    background-image: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  input, textarea {
+    border: none !important;
+    border-bottom: 1px solid #ccc !important;
+  }
+}

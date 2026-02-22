@@ -64,7 +64,7 @@ export interface Attack {
   accAttr2: AttributeKey | 'none';
   accProf: boolean;
   accBonuses: NamedBonus[];
-
+ 
   // Damage (Dano)
   dmgAttr1: AttributeKey | 'none';
   dmgAttr2: AttributeKey | 'none';
@@ -99,7 +99,7 @@ export interface Spell {
   effectBonuses: NamedBonus[];
 }
 
-export type BonusType = 'none' | 'attack' | 'damage' | 'spellDC' | 'ac' | 'for' | 'des' | 'con' | 'int' | 'sab' | 'car';
+export type BonusType = 'none' | 'attack' | 'damage' | 'spellDC' | 'ac';
 export type BonusSource = 'flat' | AttributeKey | 'prof';
 
 export interface EquipmentEntry {
@@ -139,4 +139,22 @@ export interface CharacterSheetData {
   spellAttack: string; 
   runeDC: string;
   runeAttack: string;
+}
+
+export interface RollResult {
+  title: string;
+  total: number;
+  diceRolls: number[];
+  modifier: number;
+  isCrit: boolean;
+  isFumble: boolean;
+  formula: string;
+}
+
+export interface SavedCharacter {
+  id: string;
+  name: string;
+  classLevel: string;
+  date: string;
+  data: CharacterSheetData;
 }
