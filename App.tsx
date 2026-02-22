@@ -341,11 +341,11 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen p-2 md:p-8 flex justify-center items-start">
+    <div className="min-h-screen flex justify-center items-start bg-slate-200">
       <RollModal result={rollResult} onClose={() => setRollResult(null)} />
       {showSaveModal && <SaveLoadModal currentData={data} onLoad={setData} onClose={() => setShowSaveModal(false)} />}
       
-      <div className="w-full max-w-[1200px] bg-[#fdfbf7] shadow-2xl border border-slate-300 relative overflow-hidden">
+      <div className="w-full bg-[#fdfbf7] shadow-2xl border-x border-slate-300 relative overflow-hidden min-h-screen">
         <div className="h-2 w-full bg-slate-900 flex">
            <div className="w-1/3 h-full bg-amber-500/80"></div>
            <div className="w-1/3 h-full bg-slate-900"></div>
