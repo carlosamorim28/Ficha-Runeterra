@@ -1,5 +1,6 @@
 import React from 'react';
 import { Plus, Trash2, Backpack } from 'lucide-react';
+import TextareaAutosize from 'react-textarea-autosize';
 import { EquipmentEntry } from '../types';
 import { SectionHeader } from './SectionHeader';
 import { ATTRIBUTE_LABELS, INITIAL_SKILLS } from '../constants';
@@ -109,9 +110,9 @@ export const EquipmentList = ({
             )}
           </div>
 
-          <textarea 
+          <TextareaAutosize 
             className="w-full bg-transparent resize-none text-[10px] text-slate-600 focus:outline-none placeholder-slate-300 mt-1"
-            rows={1}
+            minRows={1}
             placeholder="Descrição..."
             value={item.description}
             onChange={(e) => onUpdate(item.id, 'description', e.target.value)}

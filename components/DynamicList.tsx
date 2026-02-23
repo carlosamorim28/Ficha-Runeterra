@@ -1,5 +1,6 @@
 import React from 'react';
 import { Plus, Trash2 } from 'lucide-react';
+import TextareaAutosize from 'react-textarea-autosize';
 import { ItemEntry } from '../types';
 import { SectionHeader } from './SectionHeader';
 
@@ -39,9 +40,9 @@ export const DynamicList = ({
             />
             <button onClick={() => onRemove(item.id)} className="text-slate-300 hover:text-red-500 ml-2 transition-colors shrink-0"><Trash2 size={12}/></button>
           </div>
-          <textarea 
+          <TextareaAutosize 
             className="w-full bg-transparent resize-none text-[10px] text-slate-600 focus:outline-none placeholder-slate-300"
-            rows={2}
+            minRows={2}
             placeholder={placeholderDesc}
             value={item.description}
             onChange={(e) => onUpdate(item.id, 'description', e.target.value)}
