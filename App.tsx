@@ -15,6 +15,23 @@ import { SaveLoadModal } from './components/SaveLoadModal';
 import { AttrSelect } from './components/AttrSelect';
 import { HexStat } from './components/HexStat';
 import TextareaAutosize from 'react-textarea-autosize';
+import {
+  DndContext, 
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { SortableAttack } from './components/SortableAttack';
+import { SortableSpell } from './components/SortableSpell';
 
 // --- Main App ---
 
@@ -310,6 +327,10 @@ export default function App() {
     }));
   };
 
+  const reorderList = (field: keyof CharacterSheetData, newList: any[]) => {
+    setData(prev => ({ ...prev, [field]: newList }));
+  };
+
   // Helper to get attribute modifier by key
   const getAttrMod = (attrKey: AttributeKey | 'none') => {
     if (attrKey === 'none') return 0;
@@ -379,6 +400,28 @@ export default function App() {
       total += getAttrMod(spell.attr1); 
       spell.effectBonuses.forEach(b => total += b.value);
       return total;
+  };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (field: keyof CharacterSheetData) => (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const list = data[field] as any[];
+      const oldIndex = list.findIndex((i) => i.id === active.id);
+      const newIndex = list.findIndex((i) => i.id === over.id);
+      reorderList(field, arrayMove(list, oldIndex, newIndex));
+    }
   };
 
   return (
@@ -531,20 +574,34 @@ export default function App() {
               <div className="border border-slate-300 rounded-lg p-2 bg-slate-100 shadow-sm">
                 <SectionHeader title="Ataques & Armas" icon={Swords} />
                 <div className="space-y-3 pb-2">
-                  {data.attacks.map((atk, i) => {
-                    const accBonus = calculateAttackBonus(atk);
-                    const dmgBonus = calculateDamageBonus(atk);
-                    const dmgFormula = `${atk.dmgDice}${dmgBonus > 0 ? '+' + dmgBonus : (dmgBonus < 0 ? dmgBonus : '')}`;
-                    return (
-                    <div key={atk.id} className="bg-white border-l-4 border-l-slate-800 border-y border-r border-slate-200 rounded-r-md p-3 shadow-sm relative group hover:border-l-amber-500 transition-all">
-                       <div className="flex justify-between items-start gap-3 mb-2"><div className="flex-grow"><input type="text" value={atk.name} onChange={(e) => updateAttack(atk.id, 'name', e.target.value)} className="w-full bg-transparent border-b border-transparent focus:border-cyan-500 focus:outline-none text-base font-bold text-slate-900 placeholder-slate-300" placeholder="Nome da Arma" /></div><button onClick={() => removeAttack(atk.id)} className="text-slate-300 hover:text-red-500 transition-colors p-1" title="Remover ataque"><Trash2 size={16} /></button></div>
-                       <div className="grid grid-cols-2 gap-4 mb-3">
-                          <div className="bg-slate-50 rounded border border-slate-200 p-2"><div className="flex justify-between items-center mb-2 border-b border-slate-200 pb-1"><div className="flex items-center gap-1"><Swords size={12} className="text-slate-400" /><span className="text-[10px] font-bold uppercase text-slate-600">Acerto</span></div><button onClick={() => rollDice(`Acerto: ${atk.name}`, accBonus)} className="flex items-center gap-1 font-tech font-bold text-lg text-slate-800 bg-white px-2 py-0.5 rounded shadow-sm border border-slate-200 hover:border-cyan-500 hover:text-cyan-600 transition-colors group/btn"><Dices size={14} className="text-slate-400 group-hover/btn:text-cyan-500" /><span>{accBonus >= 0 ? '+' : ''}{accBonus}</span></button></div><div className="flex gap-1 mb-1"><AttrSelect value={atk.accAttr1} onChange={(v) => updateAttack(atk.id, 'accAttr1', v)} /><AttrSelect value={atk.accAttr2} onChange={(v) => updateAttack(atk.id, 'accAttr2', v)} /></div><div className="flex items-center gap-2 mb-1 pl-1"><input type="checkbox" checked={atk.accProf} onChange={(e) => updateAttack(atk.id, 'accProf', e.target.checked)} className="w-3 h-3 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"/><span className="text-[9px] font-bold uppercase text-slate-500">Proficiência</span></div><BonusList title="Bônus Acerto" bonuses={atk.accBonuses} onChange={(b) => updateAttack(atk.id, 'accBonuses', b)} /></div>
-                          <div className="bg-slate-50 rounded border border-slate-200 p-2"><div className="flex justify-between items-center mb-2 border-b border-slate-200 pb-1"><div className="flex items-center gap-1"><Skull size={12} className="text-slate-400" /><span className="text-[10px] font-bold uppercase text-slate-600">Dano</span></div><div className="flex items-center gap-1"><div className="text-right"><span className="font-tech font-bold text-sm text-slate-800 block leading-none">{atk.dmgDice} {dmgBonus > 0 ? `+ ${dmgBonus}` : (dmgBonus < 0 ? dmgBonus : '')}</span><span className="text-[9px] text-slate-400 font-bold uppercase">{atk.dmgType}</span></div><button onClick={() => rollDice(`Dano: ${atk.name}`, dmgFormula, 'damage')} className="text-slate-400 hover:text-red-600 hover:bg-red-50 p-1 rounded transition-colors" title="Rolar Dano"><Dices size={14} /></button></div></div><div className="flex gap-1 mb-1"><input type="text" className="w-1/3 bg-white border border-slate-300 rounded px-1 py-0.5 text-xs text-center font-tech" placeholder="1d8" value={atk.dmgDice} onChange={(e) => updateAttack(atk.id, 'dmgDice', e.target.value)} /><input type="text" className="flex-grow bg-white border border-slate-300 rounded px-1 py-0.5 text-[10px]" placeholder="Tipo" value={atk.dmgType} onChange={(e) => updateAttack(atk.id, 'dmgType', e.target.value)} /></div><div className="flex gap-1 mb-1"><AttrSelect value={atk.dmgAttr1} onChange={(v) => updateAttack(atk.id, 'dmgAttr1', v)} /><AttrSelect value={atk.dmgAttr2} onChange={(v) => updateAttack(atk.id, 'dmgAttr2', v)} /></div><BonusList title="Bônus Dano" bonuses={atk.dmgBonuses} onChange={(b) => updateAttack(atk.id, 'dmgBonuses', b)} /></div>
-                       </div>
-                       <div><label className="block text-[9px] font-bold uppercase text-slate-400 mb-1">Descrição</label><TextareaAutosize className="w-full bg-slate-50 border border-slate-100 rounded p-2 text-xs text-slate-600 focus:outline-none focus:border-cyan-200 resize-none" minRows={2} value={atk.description || ''} onChange={(e) => updateAttack(atk.id, 'description', e.target.value)} placeholder="Alcance, etc..." /></div>
-                    </div>
-                  )})}
+                  <DndContext 
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd('attacks')}
+                  >
+                    <SortableContext 
+                      items={data.attacks.map(a => a.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      {data.attacks.map((atk) => {
+                        const accBonus = calculateAttackBonus(atk);
+                        const dmgBonus = calculateDamageBonus(atk);
+                        const dmgFormula = `${atk.dmgDice}${dmgBonus > 0 ? '+' + dmgBonus : (dmgBonus < 0 ? dmgBonus : '')}`;
+                        return (
+                          <SortableAttack 
+                            key={atk.id}
+                            atk={atk}
+                            accBonus={accBonus}
+                            dmgBonus={dmgBonus}
+                            dmgFormula={dmgFormula}
+                            updateAttack={updateAttack}
+                            removeAttack={removeAttack}
+                            rollDice={rollDice}
+                          />
+                        );
+                      })}
+                    </SortableContext>
+                  </DndContext>
                   <button onClick={addAttack} className="w-full mt-2 border-2 border-dashed border-slate-300 rounded-lg py-2 flex items-center justify-center text-slate-400 hover:text-amber-600 hover:border-amber-400 hover:bg-amber-50 transition-all text-xs font-bold uppercase tracking-wider gap-2 group"><Plus size={14} className="group-hover:scale-110 transition-transform" /> Adicionar Arma</button>
                 </div>
               </div>
@@ -602,6 +659,7 @@ export default function App() {
                 onAdd={() => addListItem('features')} 
                 onRemove={(id) => removeListItem('features', id)} 
                 onUpdate={(id, f, v) => updateEquipmentOrFeature('features', id, f, v)} 
+                onReorder={(items) => reorderList('features', items)}
                 className="min-h-[300px]" 
                 addButtonLabel="Nova Característica"
               />
@@ -617,11 +675,12 @@ export default function App() {
                 onAdd={() => addListItem('equipment')} 
                 onRemove={(id) => removeListItem('equipment', id)} 
                 onUpdate={(id, f, v) => updateEquipmentOrFeature('equipment', id, f, v)} 
+                onReorder={(items) => reorderList('equipment', items)}
                 addButtonLabel="Adicionar Equipamento"
               />
-              <DynamicList title="Idiomas & Ofícios" icon={Scroll} items={data.languages} onAdd={() => addListItem('languages')} onRemove={(id) => removeListItem('languages', id)} onUpdate={(id, f, v) => updateListItem('languages', id, f, v)} className="h-64" placeholderTitle="Idioma/Ofício"/>
-              <DynamicList title="Outras Proficiências" icon={Shield} items={data.proficiencies} onAdd={() => addListItem('proficiencies')} onRemove={(id) => removeListItem('proficiencies', id)} onUpdate={(id, f, v) => updateListItem('proficiencies', id, f, v)} className="h-64" placeholderTitle="Proficiência"/>
-              <DynamicList title="Anotações" icon={Scroll} items={data.notes} onAdd={() => addListItem('notes')} onRemove={(id) => removeListItem('notes', id)} onUpdate={(id, f, v) => updateListItem('notes', id, f, v)} className="h-64" placeholderTitle="Nota"/>
+              <DynamicList title="Idiomas & Ofícios" icon={Scroll} items={data.languages} onAdd={() => addListItem('languages')} onRemove={(id) => removeListItem('languages', id)} onUpdate={(id, f, v) => updateListItem('languages', id, f, v)} onReorder={(items) => reorderList('languages', items)} className="h-64" placeholderTitle="Idioma/Ofício"/>
+              <DynamicList title="Outras Proficiências" icon={Shield} items={data.proficiencies} onAdd={() => addListItem('proficiencies')} onRemove={(id) => removeListItem('proficiencies', id)} onUpdate={(id, f, v) => updateListItem('proficiencies', id, f, v)} onReorder={(items) => reorderList('proficiencies', items)} className="h-64" placeholderTitle="Proficiência"/>
+              <DynamicList title="Anotações" icon={Scroll} items={data.notes} onAdd={() => addListItem('notes')} onRemove={(id) => removeListItem('notes', id)} onUpdate={(id, f, v) => updateListItem('notes', id, f, v)} onReorder={(items) => reorderList('notes', items)} className="h-64" placeholderTitle="Nota"/>
             </div>
           </div>
           
