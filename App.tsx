@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { AttributeKey, CharacterSheetData, Skill, Attack, Spell, EquipmentEntry, BonusType, RollResult, ItemEntry } from './types';
 import { DEFAULT_CHARACTER, ATTRIBUTE_LABELS } from './constants';
-import { Save, Printer, RefreshCw, Shield, Zap, Activity, Skull, Swords, Sparkles, Scroll, Brain, Plus, Trash2, ChevronDown, Dices } from 'lucide-react';
+import { Save, Printer, RefreshCw, Shield, Zap, Activity, Skull, Swords, Sparkles, Scroll, Brain, Plus, Trash2, ChevronDown, Dices, Backpack } from 'lucide-react';
 
 // --- Components ---
 import { SectionHeader } from './components/SectionHeader';
@@ -44,6 +44,20 @@ export default function App() {
         }));
       } else {
         parsed.equipment = [];
+      }
+
+      if (typeof parsed.features === 'string') {
+        parsed.features = [];
+      } else if (Array.isArray(parsed.features)) {
+        parsed.features = parsed.features.map((f: any) => ({
+          ...f,
+          isEquipped: f.isEquipped ?? true,
+          bonusType: f.bonusType ?? 'none',
+          bonusSource: f.bonusSource ?? 'flat',
+          bonusValue: f.bonusValue ?? 0,
+        }));
+      } else {
+        parsed.features = [];
       }
       
       if (parsed.info.level === undefined) {
@@ -256,9 +270,17 @@ export default function App() {
 
   // Reusable generic list management
   const addListItem = (field: keyof CharacterSheetData) => {
-    if (field === 'equipment') {
-      const newItem: EquipmentEntry = { id: Date.now().toString(), title: '', description: '', isEquipped: false, bonusType: 'none', bonusSource: 'flat', bonusValue: 0 };
-      setData(prev => ({ ...prev, equipment: [...prev.equipment, newItem] }));
+    if (field === 'equipment' || field === 'features') {
+      const newItem: EquipmentEntry = { 
+        id: Date.now().toString(), 
+        title: '', 
+        description: '', 
+        isEquipped: field === 'features', // Features active by default
+        bonusType: 'none', 
+        bonusSource: 'flat', 
+        bonusValue: 0 
+      };
+      setData(prev => ({ ...prev, [field]: [...(prev[field] as EquipmentEntry[]), newItem] }));
       return;
     }
     const newItem: ItemEntry = { id: Date.now().toString(), title: '', description: '' };
@@ -266,8 +288,8 @@ export default function App() {
   };
 
   const removeListItem = (field: keyof CharacterSheetData, id: string) => {
-    if (field === 'equipment') {
-      setData(prev => ({ ...prev, equipment: prev.equipment.filter(item => item.id !== id) }));
+    if (field === 'equipment' || field === 'features') {
+      setData(prev => ({ ...prev, [field]: (prev[field] as EquipmentEntry[]).filter(item => item.id !== id) }));
       return;
     }
     setData(prev => ({ ...prev, [field]: (prev[field] as ItemEntry[]).filter(item => item.id !== id) }));
@@ -280,10 +302,10 @@ export default function App() {
     }));
   };
 
-  const updateEquipment = (id: string, field: keyof EquipmentEntry, val: any) => {
+  const updateEquipmentOrFeature = (field: 'equipment' | 'features', id: string, itemField: keyof EquipmentEntry, val: any) => {
     setData(prev => ({
       ...prev,
-      equipment: prev.equipment.map(item => item.id === id ? { ...item, [field]: val } : item)
+      [field]: (prev[field] as EquipmentEntry[]).map(item => item.id === id ? { ...item, [itemField]: val } : item)
     }));
   };
 
@@ -294,17 +316,27 @@ export default function App() {
   };
 
   const getEquipmentBonus = (type: BonusType, target?: string) => {
-    return data.equipment.filter(eq => {
+    const equipmentBonuses = data.equipment.filter(eq => {
       if (!eq.isEquipped || eq.bonusType !== type) return false;
       if (type === 'skill' || type === 'save') {
         return eq.bonusTarget === target;
       }
       return true;
-    }).reduce((sum, eq) => {
+    });
+
+    const featureBonuses = data.features.filter(f => {
+      if (!f.isEquipped || f.bonusType !== type) return false;
+      if (type === 'skill' || type === 'save') {
+        return f.bonusTarget === target;
+      }
+      return true;
+    });
+
+    return [...equipmentBonuses, ...featureBonuses].reduce((sum, item) => {
       let val = 0;
-      if (eq.bonusSource === 'flat') val = eq.bonusValue;
-      else if (eq.bonusSource === 'prof') val = data.vitals.proficiencyBonus;
-      else val = getAttrMod(eq.bonusSource as AttributeKey);
+      if (item.bonusSource === 'flat') val = item.bonusValue;
+      else if (item.bonusSource === 'prof') val = data.vitals.proficiencyBonus;
+      else val = getAttrMod(item.bonusSource as AttributeKey);
       return sum + val;
     }, 0);
   };
@@ -562,13 +594,30 @@ export default function App() {
                  <div className="pt-3 border-t border-slate-200 bg-slate-50 -mx-4 -mb-4 px-4 pb-4 rounded-b-lg"><div className="flex justify-between items-center mb-2"><span className="text-[10px] font-bold uppercase text-slate-500">Sucessos</span><div className="flex gap-2">{[0,1,2].map(i => (<button key={i} onClick={() => setData(prev => ({...prev, deathSaves: {...prev.deathSaves, success: i < prev.deathSaves.success ? i : i + 1}}))} className={`w-4 h-4 rounded-full border border-slate-400 transition-all ${i < data.deathSaves.success ? 'bg-green-600 border-green-700 shadow-[0_0_5px_rgba(22,163,74,0.6)]' : 'bg-white'}`}/>))}</div></div><div className="flex justify-between items-center"><span className="text-[10px] font-bold uppercase text-slate-500">Falhas</span><div className="flex gap-2">{[0,1,2].map(i => (<button key={i} onClick={() => setData(prev => ({...prev, deathSaves: {...prev.deathSaves, failure: i < prev.deathSaves.failure ? i : i + 1}}))} className={`w-4 h-4 rounded-full border border-slate-400 transition-all ${i < data.deathSaves.failure ? 'bg-red-600 border-red-700 shadow-[0_0_5px_rgba(220,38,38,0.6)]' : 'bg-white'}`}/>))}</div></div></div>
               </div>
               
-              <DynamicList title="Características & Talentos" icon={Brain} items={data.features} onAdd={() => addListItem('features')} onRemove={(id) => removeListItem('features', id)} onUpdate={(id, f, v) => updateListItem('features', id, f, v)} className="min-h-[300px]" />
+              <EquipmentList 
+                title="Características & Talentos" 
+                icon={Brain} 
+                items={data.features} 
+                onAdd={() => addListItem('features')} 
+                onRemove={(id) => removeListItem('features', id)} 
+                onUpdate={(id, f, v) => updateEquipmentOrFeature('features', id, f, v)} 
+                className="min-h-[300px]" 
+                addButtonLabel="Nova Característica"
+              />
             </div>
           </div>
 
           <div className="mt-8 border-t-2 border-slate-900/10 pt-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <EquipmentList items={data.equipment} onAdd={() => addListItem('equipment')} onRemove={(id) => removeListItem('equipment', id)} onUpdate={updateEquipment} />
+              <EquipmentList 
+                title="Equipamento" 
+                icon={Backpack} 
+                items={data.equipment} 
+                onAdd={() => addListItem('equipment')} 
+                onRemove={(id) => removeListItem('equipment', id)} 
+                onUpdate={(id, f, v) => updateEquipmentOrFeature('equipment', id, f, v)} 
+                addButtonLabel="Adicionar Equipamento"
+              />
               <DynamicList title="Idiomas & Ofícios" icon={Scroll} items={data.languages} onAdd={() => addListItem('languages')} onRemove={(id) => removeListItem('languages', id)} onUpdate={(id, f, v) => updateListItem('languages', id, f, v)} className="h-64" placeholderTitle="Idioma/Ofício"/>
               <DynamicList title="Outras Proficiências" icon={Shield} items={data.proficiencies} onAdd={() => addListItem('proficiencies')} onRemove={(id) => removeListItem('proficiencies', id)} onUpdate={(id, f, v) => updateListItem('proficiencies', id, f, v)} className="h-64" placeholderTitle="Proficiência"/>
               <DynamicList title="Anotações" icon={Scroll} items={data.notes} onAdd={() => addListItem('notes')} onRemove={(id) => removeListItem('notes', id)} onUpdate={(id, f, v) => updateListItem('notes', id, f, v)} className="h-64" placeholderTitle="Nota"/>

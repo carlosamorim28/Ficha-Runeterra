@@ -1,4 +1,4 @@
-export type AttributeKey = 'for' | 'des' | 'con' | 'int' | 'sab' | 'car';
+export type AttributeKey = "for" | "des" | "con" | "int" | "sab" | "car";
 
 export interface Attribute {
   value: number;
@@ -58,22 +58,22 @@ export interface Attack {
   id: string;
   name: string;
   description: string;
-  
+
   // Attack Roll (Acerto)
-  accAttr1: AttributeKey | 'none';
-  accAttr2: AttributeKey | 'none';
+  accAttr1: AttributeKey | "none";
+  accAttr2: AttributeKey | "none";
   accProf: boolean;
   accBonuses: NamedBonus[];
- 
+
   // Damage (Dano)
-  dmgAttr1: AttributeKey | 'none';
-  dmgAttr2: AttributeKey | 'none';
+  dmgAttr1: AttributeKey | "none";
+  dmgAttr2: AttributeKey | "none";
   dmgDice: string;
   dmgType: string;
   dmgBonuses: NamedBonus[];
 }
 
-export type SpellType = 'damage' | 'utility' | 'defense';
+export type SpellType = "damage" | "utility" | "defense";
 
 export interface Spell {
   id: string;
@@ -82,15 +82,15 @@ export interface Spell {
   type: SpellType;
   cycle: number;
   manaCost: number;
-  
+
   // Logic Configuration (For DC, Attack, or Effect)
-  attr1: AttributeKey | 'none';
-  attr2: AttributeKey | 'none';
+  attr1: AttributeKey | "none";
+  attr2: AttributeKey | "none";
   hasProficiency: boolean;
-  
+
   // Mode: 'attack' (Attack Roll) or 'save' (DC) - Only relevant for Damage/Utility
-  castMode: 'attack' | 'save'; 
-  
+  castMode: "attack" | "save";
+
   bonuses: NamedBonus[]; // Bonuses for Hit/DC/AC
 
   // Damage / Effect Output
@@ -99,8 +99,16 @@ export interface Spell {
   effectBonuses: NamedBonus[];
 }
 
-export type BonusType = 'none' | 'attack' | 'damage' | 'spellDC' | 'ac' | 'hp' | 'skill' | 'save';
-export type BonusSource = 'flat' | AttributeKey | 'prof';
+export type BonusType =
+  | "none"
+  | "attack"
+  | "damage"
+  | "spellDC"
+  | "ac"
+  | "hp"
+  | "skill"
+  | "save";
+export type BonusSource = "flat" | AttributeKey | "prof";
 
 export interface EquipmentEntry {
   id: string;
@@ -126,9 +134,9 @@ export interface CharacterSheetData {
   vitals: Vitals;
   savingThrows: Record<AttributeKey, boolean>;
   attacks: Attack[];
-  spells: Spell[]; 
-  runes: string; 
-  features: ItemEntry[];
+  spells: Spell[];
+  runes: string;
+  features: EquipmentEntry[];
   equipment: EquipmentEntry[];
   languages: ItemEntry[];
   proficiencies: ItemEntry[];
@@ -136,8 +144,8 @@ export interface CharacterSheetData {
   deathSaves: { success: number; failure: number };
   exhaustion: number;
   mana: { current: string; max: string };
-  spellSaveDC: string; 
-  spellAttack: string; 
+  spellSaveDC: string;
+  spellAttack: string;
   runeDC: string;
   runeAttack: string;
 }
