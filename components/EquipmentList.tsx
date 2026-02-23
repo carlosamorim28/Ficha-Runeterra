@@ -2,6 +2,7 @@ import React from 'react';
 import { Plus, Trash2, Backpack } from 'lucide-react';
 import { EquipmentEntry } from '../types';
 import { SectionHeader } from './SectionHeader';
+import { ATTRIBUTE_LABELS, INITIAL_SKILLS } from '../constants';
 
 export const EquipmentList = ({ 
   items, 
@@ -39,28 +40,47 @@ export const EquipmentList = ({
             <button onClick={() => onRemove(item.id)} className="text-slate-300 hover:text-red-500 ml-2 transition-colors shrink-0"><Trash2 size={12}/></button>
           </div>
           
-          <div className="flex gap-1 mb-1 mt-1">
+          <div className="flex flex-wrap gap-1 mb-1 mt-1">
             <select 
               value={item.bonusType} 
               onChange={(e) => onUpdate(item.id, 'bonusType', e.target.value)}
-              className="text-[9px] uppercase font-bold text-slate-500 bg-white border border-slate-200 rounded px-1 py-0.5 focus:outline-none"
+              className="text-[9px] uppercase font-bold text-slate-500 bg-white border border-slate-200 rounded px-1 py-0.5 focus:outline-none max-w-[80px]"
             >
               <option value="none">Sem Bônus</option>
               <option value="attack">Acerto</option>
               <option value="damage">Dano</option>
               <option value="spellDC">CD Magia</option>
-              <option value="ac">Armadura (CA)</option>
+              <option value="ac">Armadura</option>
+              <option value="hp">Vida (PV)</option>
+              <option value="skill">Perícia</option>
+              <option value="save">Resistência</option>
             </select>
             
             {item.bonusType !== 'none' && (
               <>
+                {(item.bonusType === 'skill' || item.bonusType === 'save') && (
+                  <select
+                    value={item.bonusTarget || ''}
+                    onChange={(e) => onUpdate(item.id, 'bonusTarget', e.target.value)}
+                    className="text-[9px] uppercase font-bold text-slate-500 bg-white border border-slate-200 rounded px-1 py-0.5 focus:outline-none max-w-[80px]"
+                  >
+                    <option value="">Alvo...</option>
+                    {item.bonusType === 'skill' && Object.entries(INITIAL_SKILLS).map(([k, v]) => (
+                      <option key={k} value={k}>{v.name}</option>
+                    ))}
+                    {item.bonusType === 'save' && Object.entries(ATTRIBUTE_LABELS).map(([k, v]) => (
+                      <option key={k} value={v}>{v}</option>
+                    ))}
+                  </select>
+                )}
+
                 <select 
                   value={item.bonusSource} 
                   onChange={(e) => onUpdate(item.id, 'bonusSource', e.target.value)}
                   className="text-[9px] uppercase font-bold text-slate-500 bg-white border border-slate-200 rounded px-1 py-0.5 focus:outline-none"
                 >
                   <option value="flat">Fixo</option>
-                  <option value="prof">Proficiência</option>
+                  <option value="prof">Prof.</option>
                   <option value="for">FOR</option>
                   <option value="des">DES</option>
                   <option value="con">CON</option>

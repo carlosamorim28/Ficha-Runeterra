@@ -99,7 +99,7 @@ export interface Spell {
   effectBonuses: NamedBonus[];
 }
 
-export type BonusType = 'none' | 'attack' | 'damage' | 'spellDC' | 'ac';
+export type BonusType = 'none' | 'attack' | 'damage' | 'spellDC' | 'ac' | 'hp' | 'skill' | 'save';
 export type BonusSource = 'flat' | AttributeKey | 'prof';
 
 export interface EquipmentEntry {
@@ -110,6 +110,7 @@ export interface EquipmentEntry {
   bonusType: BonusType;
   bonusSource: BonusSource;
   bonusValue: number;
+  bonusTarget?: string;
 }
 
 export interface ItemEntry {
